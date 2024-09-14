@@ -5,8 +5,7 @@ assistant = Assistant()
 
 @assistant.command_handler(("exit", "close", "bye"))
 def close(caller:Assistant):
-    caller.mainloopActive = False
-    return "Good bye!"
+    raise KeyboardInterrupt
 
 @assistant.command_handler("hello")
 def hello_handler(caller:Assistant):

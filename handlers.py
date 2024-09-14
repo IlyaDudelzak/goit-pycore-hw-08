@@ -2,6 +2,7 @@ from fields import AddressBook, datetime
 from bithday import string_to_date
 from collections import defaultdict
 from datetime import datetime
+import pickle
 import re
 
 class ContactError(Exception):
@@ -10,9 +11,8 @@ class ContactError(Exception):
 class Assistant:
     types=(int, float, str, datetime)
     def __init__(self):
-        self.book = AddressBook()
+        self.book = self.__load_data()
         self.handlers = defaultdict(list)
-        self.mainloopActive = False
 
     @staticmethod
     def input_error(func):
@@ -23,6 +23,18 @@ class Assistant:
                 return str(e)
 
         return inner
+    
+    def __save_data(self, filename="addressbook.pkl"):
+        with open(filename, "wb") as f:
+            pickle.dump(self.book, f)
+
+    @staticmethod
+    def __load_data(filename="addressbook.pkl"):
+        try:
+            with open(filename, "rb") as f:
+                return pickle.load(f)
+        except FileNotFoundError:
+            return AddressBook()
     
     def check_command(self, commands, args:tuple):
         regex = '^[a-z_][a-z0-9_]*'
@@ -94,8 +106,7 @@ class Assistant:
         return [handler["func"](self, *args) for handler in handlers]
     
     def mainLoop(self):
-        self.mainloopActive = True
-        while self.mainloopActive:
+        while True:
             try:
                 res = self.handle_input(input(">>> "))
                 if(type(res) == list):
@@ -103,5 +114,8 @@ class Assistant:
                 else:
                     print(res)
             except KeyboardInterrupt:
-                print("Good bye!")
-                self.mainloopActive = False
+                print("\nGood bye!")
+                self.__save_data()
+                break
+            except Exception as e:
+                print(e)
